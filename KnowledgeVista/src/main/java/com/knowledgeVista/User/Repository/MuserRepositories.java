@@ -26,6 +26,8 @@ public interface MuserRepositories extends JpaRepository<Muser,Long> {
 	@Query("SELECT u FROM Muser u WHERE u.email = ?1")
   Optional<Muser> findByEmail(String email);
 	
+	
+	
 	@Query("SELECT u.userId FROM Muser u WHERE u.email = ?1")
 	Long  findidByEmail(String email);
 	
@@ -190,6 +192,9 @@ LocalDateTime findLatestLastActiveByInstitution(@Param("institutionName") String
 
 	    @Query("SELECT u FROM Muser u WHERE u.role.roleId = ?1")
 		  Optional<Muser> findByroleid(Long roleId);
+	    
+	    @Query("SELECT u FROM Muser u WHERE u.role.roleId = ?1")
+		  List<Muser> findByroleidSAS(Long roleId);
 	    
 	    @Query("SELECT new com.knowledgeVista.Migration.MuserMigrationDto(cd.userId, cd.username, cd.psw, cd.email, cd.phone, cd.isActive, cd.dob, cd.skills, cd.institutionName, cd.profile, cd.countryCode, cd.lastactive, cd.inactiveDescription, cd.role) FROM Muser cd WHERE cd.institutionName = :institutionName")
 	    List<MuserMigrationDto> findAllByInstitutionNameDto(@Param("institutionName") String institutionName);

@@ -29,6 +29,9 @@ public class License {
     @Column(name="key_value")
     private String key ;
     
+    @Column(name="key_value2")
+    private String key2 ;
+    
     @Column(name="course")
     private String course ;
     
@@ -108,15 +111,16 @@ public class License {
 		this.trainer = trainer;
 	}
 
-	
 
-	public License(long id, String company_name, String product_name, String key, String course, String students,
-			String trainer, String type, Date start_date, Date end_date, String filename, MultipartFile licenseFile) {
+	public License(long id, String company_name, String product_name, String key, String key2, String course,
+			String students, String trainer, String type, Date start_date, Date end_date, String filename,
+			String institution, Long storagesize, MultipartFile licenseFile) {
 		super();
 		this.id = id;
 		this.company_name = company_name;
 		this.product_name = product_name;
 		this.key = key;
+		this.key2 = key2;
 		this.course = course;
 		this.students = students;
 		this.trainer = trainer;
@@ -124,6 +128,8 @@ public class License {
 		this.start_date = start_date;
 		this.end_date = end_date;
 		this.filename = filename;
+		this.institution = institution;
+		this.storagesize = storagesize;
 		LicenseFile = licenseFile;
 	}
 
@@ -175,6 +181,15 @@ public class License {
 		this.key = key;
 	}
 
+	
+	public String getKey2() {
+		return key2;
+	}
+
+	public void setKey2(String key2) {
+		this.key2 = key2;
+	}
+
 	public Date getStart_date() {
 		return start_date;
 	}
@@ -194,16 +209,20 @@ public class License {
 	public License() {
 		super();
 	}
-	
-
-	
 
 	@Override
 	public String toString() {
 		return "License [id=" + id + ", company_name=" + company_name + ", product_name=" + product_name + ", key="
-				+ key +"type="+type+"course="+course+", filename= "+ filename +", start_date=" + start_date +",LicenseFile="+LicenseFile+ ", end_date=" + end_date+"]";
+				+ key + ", key2=" + key2 + ", course=" + course + ", students=" + students + ", trainer=" + trainer
+				+ ", type=" + type + ", start_date=" + start_date + ", end_date=" + end_date + ", filename=" + filename
+				+ ", institution=" + institution + ", storagesize=" + storagesize + ", LicenseFile=" + LicenseFile
+				+ "]";
 	}
+	
 
+	
+
+	
 	
     
 

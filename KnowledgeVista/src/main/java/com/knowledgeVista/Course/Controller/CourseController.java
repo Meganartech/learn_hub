@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -31,6 +32,7 @@ import com.knowledgeVista.License.licenseRepository;
 import com.knowledgeVista.Notification.Service.NotificationService;
 import com.knowledgeVista.Payments.Course_PartPayment_Structure;
 import com.knowledgeVista.Payments.InstallmentDetails;
+import com.knowledgeVista.Payments.Orderuser;
 import com.knowledgeVista.Payments.repos.OrderuserRepo;
 import com.knowledgeVista.Payments.repos.installmentdetilsrepo;
 import com.knowledgeVista.Payments.repos.partpayrepo;
@@ -82,6 +84,7 @@ public class CourseController {
 	         }
 	         String role = jwtUtil.getRoleFromToken(token);
 	         String email=jwtUtil.getUsernameFromToken(token);
+	         
 	   	     Optional<Muser>opreq=muserRepository.findByEmail(email);
 	   	     String institution="";
 	   	     if(opreq.isPresent()) {
@@ -122,6 +125,179 @@ public class CourseController {
 	         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 	     }
 	 }
+
+	 public ResponseEntity<?> sysAdminDashboardByInstitytaion(String token,String institutationName) {
+		  try {
+		         if (!jwtUtil.validateToken(token)) {
+		             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+		         }
+	 
+		         String role = jwtUtil.getRoleFromToken(token);
+		         Optional<Muser> opreq;
+		         if (!"SYSADMIN".equals(role)) {
+		             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+		         }
+			  Map<String, Object> paymentdetails = new HashMap<>();
+			  paymentdetails=this.adminPaymentDetails(institutationName);
+		        
+		         return ResponseEntity.ok().body(paymentdetails);
+		  } catch (Exception e) {
+		         e.printStackTrace();    logger.error("", e);; // You can replace this with logging framework like Log4j
+		         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+		     }
+	 }
+	 public ResponseEntity<?> sysAdminDashboard(String token) {
+	     try {
+	         if (!jwtUtil.validateToken(token)) {
+	             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+	         }
+	         String role = jwtUtil.getRoleFromToken(token);
+	         String email=jwtUtil.getUsernameFromToken(token);
+	         Long roleId=1L;
+//	         Optional<Muser> opreq;
+	         if (!"SYSADMIN".equals(role)) {
+	             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+	         }
+	         String institution="";
+	         Map<String, Object> paymentdetails = new HashMap<>();
+	         if(environment.equals("VPS")){
+	        	 Optional<Muser> opreq = muserRepository.findByroleid(roleId);
+	        	 if(opreq.isPresent()) {
+		   	    	 Muser requser=opreq.get();
+		   	    	institution=requser.getInstitutionName();
+		   	     }else {
+		   	    	 return null; 
+		   	     }
+	        	
+	        	 
+	        	 paymentdetails=this.adminPaymentDetails(institution);
+	        	 
+	         }else if ( environment.equals("SAS")) {
+	        	 
+	        	 List<Muser> opreqsas = muserRepository.findByroleidSAS(roleId);
+	        	 List<String> institutionNames = opreqsas.stream()
+	        			    .map(Muser::getInstitutionName)
+	        			    .filter(Objects::nonNull)
+	        			    .collect(Collectors.toList());
+	        	 Long totalcount=0L;
+        		 Long totaltrainercount=0L;
+        		 Long totalusercount=0L;
+        		 Long totalavailableSeats=0L;
+        		 Long totalamountRecived=0L;
+        		 Long totalpaidcourse=0L;
+
+	        	 for (String institutions : institutionNames) {
+//	        		 Map<String, Object> institutionPaymentDetail=this.adminPaymentDetails(institution);
+	        		
+	        		 Long count= coursedetailrepository.countCourseByInstitutionName(institutions);
+	        		 totalcount+=(count != null ? count : 0L);
+	        		 Long trainercount= muserRepository.countByRoleNameandInstitutionName("TRAINER", institutions);
+	        		 totaltrainercount+=(trainercount != null ? trainercount : 0L);
+	                 Long usercount= muserRepository.countByRoleNameandInstitutionName("USER", institutions);
+	                 totalusercount+=(usercount != null ? usercount : 0L);
+	                 // Get the total amount received, and if it's null, use 0L instead.
+	                 Long totalAmount = orderuser.getTotalAmountReceivedByInstitution(institutions);
+	                 totalamountRecived+=(totalAmount != null ? totalAmount : 0L);
+	                 
+	                 Long  availableSeats = coursedetailrepository.countTotalAvailableSeats(institutions);
+	                 totalavailableSeats+=(availableSeats != null ? availableSeats : 0L);
+	                 Long paidcourse=coursedetailrepository.countPaidCoursesByInstitution(institutions);
+	                 totalpaidcourse+=(paidcourse != null ? paidcourse : 0L);
+	         }
+	   	  
+	   	    
+	        	 Map<String, Long> response = new HashMap<>();
+	   	       response.put("coursecount",totalcount);
+	   	       response.put("trainercount",totaltrainercount);
+	   	       response.put("usercount", totalusercount);
+	   	       response.put("availableseats", totalavailableSeats);
+	   	       response.put("paidcourse", totalpaidcourse);
+	   	       response.put("amountRecived", totalamountRecived);
+	   	       
+	   	       
+	 	      paymentdetails.put("paymentsummary", response); // Summary data
+	   	   
+	         }
+	   	 
+	         return ResponseEntity.ok().body(paymentdetails);
+	         
+	     } catch (DecodingException ex) {
+	         // Log the decoding exception
+	         ex.printStackTrace();    logger.error("", ex);; 
+	         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+	     } catch (Exception e) {
+	         e.printStackTrace();    logger.error("", e);; // You can replace this with logging framework like Log4j
+	         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+	     }
+	 }
+	 
+	 public Map<String, Object> adminPaymentDetails(String institution ) throws Exception {
+		 
+		 
+		 
+         Long count = coursedetailrepository.countCourseByInstitutionName(institution);
+            Long trainercount = muserRepository.countByRoleNameandInstitutionName("TRAINER", institution);
+            Long usercount = muserRepository.countByRoleNameandInstitutionName("USER", institution);
+            
+            Long  totalAvailableSeats = coursedetailrepository.countTotalAvailableSeats(institution);
+            Long amountRecived=orderuser.getTotalAmountReceivedByInstitution(institution);
+            Long paidcourse=coursedetailrepository.countPaidCoursesByInstitution(institution);
+            List<Orderuser>userpaymentdetails=orderuser.findAllByinstitutionName(institution);
+            userpaymentdetails.removeIf(order -> order.getAmountReceived() == 0);
+//            paymentdetails.forEach(order -> {
+//            	 System.out.println("Name: " + order.getUsername() +"Email: " + order.getEmail()+" | CourseName: " + order.getCourseName()+ " | BatchName: " + order.getBatchName() + " | Amount: " + order.getAmountReceived());
+////            	 System.out.print("Email: " + order.getEmail()+" | CourseName: " + order.getCourseName()+ " | Amount: " + order.getAmountReceived() + " | Amount: " + order.getAmountReceived());
+//                 
+//            });
+            // ✅ Inner Class
+	 	      class OrderResponse {
+	 	          private String name;
+	 	          private String courseName;
+	 	          private String batchName;
+	 	          private double amount;
+
+	 	          public OrderResponse(String name, String courseName, String batchName, double amount) {
+	 	              this.name = name;
+	 	              this.courseName = courseName;
+	 	              this.batchName = batchName;
+	 	              this.amount = amount;
+	 	          }
+
+	 	          // Getters are required for Jackson to serialize the object
+	 	          public String getName() { return name; }
+	 	          public String getCourseName() { return courseName; }
+	 	          public String getBatchName() { return batchName; }
+	 	          public double getAmount() { return amount; }
+	 	      }
+            // Convert List<Orderuser> to List of JSON objects
+            List<OrderResponse> jsonList = userpaymentdetails.stream()
+                    .map(order -> new OrderResponse(order.getUsername(),
+                            order.getCourseName(), order.getBatchName(), order.getAmountReceived()))
+                    .collect(Collectors.toList());
+           
+            // Convert list to JSON string using Jackson
+            ObjectMapper objectMapper = new ObjectMapper();
+            String jsonOutput = objectMapper.writeValueAsString(jsonList);
+            
+ 	       Map<String, Long> response = new HashMap<>();
+ 	       response.put("coursecount",count);
+ 	       response.put("trainercount",trainercount);
+ 	       response.put("usercount", usercount);
+ 	       response.put("availableseats", totalAvailableSeats);
+ 	       response.put("paidcourse", paidcourse);
+ 	       response.put("amountRecived", amountRecived);
+ 	     
+ 	      // ✅ Combine both JSON list and summary data
+ 	        Map<String, Object> paymentdetails = new HashMap<>();
+ 	       paymentdetails.put("paymentlist", jsonList);  // List of orders
+ 	      paymentdetails.put("paymentsummary", response); // Summary data
+		 
+		 
+		 return paymentdetails;
+	 }
+	 
+	 
+	
 
 	 //--------------------------working------------------------------------
 	

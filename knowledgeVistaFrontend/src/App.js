@@ -91,6 +91,7 @@ import ScrollToTop from "./ScrollToTop.js";
 import ViewAllBAtchForCourse from "./Batch/ViewAllBAtchForCourse.js";
 import Attendance from "./Student/Attendance.js";
 import MyAttendance from "./Student/MyAttendance.js";
+import LicenceFileCreation from "./AuthenticationPages/LicenceFileCreation.js";
 function App() {
   useEffect(() => {
     pcoded();
@@ -196,7 +197,7 @@ function App() {
               element={
                 // <ErrorBoundary>
                 <PrivateRoute
-                  onlyadmin={true}
+                  // onlyadmin={true}
                   authenticationRequired={true}
                   authorizationRequired={true}
                   licence={true}
@@ -949,6 +950,17 @@ function App() {
                 </ErrorBoundary>
               }
             />
+            <Route
+              path="/getlicence"
+              element={
+                <ErrorBoundary>
+                  <PrivateRoute authenticationRequired={true} sysadmin={true}>
+                    <LicenceFileCreation />
+                  </PrivateRoute>
+                </ErrorBoundary>
+              }
+            />
+            
             <Route
               path="/Zoomkeyupload"
               element={

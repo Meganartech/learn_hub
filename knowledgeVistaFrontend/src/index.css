@@ -43,3 +43,22 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px; /* Make scrollbar thin */
+  border-radius: 30px; /* More rounded edges */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Light gray track */
+  border-radius: 30px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #888; /* Dark gray thumb */
+  border-radius: 5px; /* Round edges */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #555; /* Darker gray on hover */
+}
